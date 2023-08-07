@@ -11,11 +11,7 @@ function mergeFile(filePath, newPath) {
 		let files = fs.readdirSync(filePath),
 			newFile = fs.createWriteStream(newPath);
 		let filesArr = files.sort((a, b) => {
-			if (Number(a) > Number(b)) {
-				return -1
-			} else {
-				return 1
-			}
+			return Number(a) > Number(b);
 		});
 
 		main(0);

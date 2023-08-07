@@ -77,7 +77,7 @@ export default defineComponent({
     const sliceFile = file => {
       const files = []
       //定义每个chunk的大小
-      const chunkSize = 128 * 1024
+      const chunkSize = 1024 * 1024 * 2
       //根据chunkSize进行切片
       for (let i = 0; i < file.size; i += chunkSize) {
         const end = i + chunkSize >= file.size ? file.size : i + chunkSize
@@ -211,7 +211,7 @@ p {
   width: 500px;
   height: auto;
   border-radius: 15px;
-  background: #fff;
+  // background: #fff;
 }
 
 .upload h3 {
@@ -289,7 +289,7 @@ p {
 }
 .btn {
   width: 88px;
-  background-color: #fff;
+  // background-color: #fff;
   border: 1px solid black;
   border-radius: 6px;
 }

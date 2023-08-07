@@ -8,5 +8,3 @@ import Bigform from './components/bigform.vue'
     <Bigform></Bigform>
   </div>
 </template>
-
-

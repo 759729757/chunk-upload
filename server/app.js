@@ -1,14 +1,18 @@
 const express = require('express');
-const app = express()
-const cors = require('cors')
+const app = express();
+const cors = require('cors');
 // 解决跨域
-app.use(cors())
+app.use(cors());
 
-const bigRouter = require('./routes/index')
+const initDatabase = require('./dao/init-database');
 
-app.use('/file', bigRouter)
+const bigRouter = require('./routes/index');
 
+// 初始化表
+initDatabase();
 
-app.listen(3001, ()=>{
-    console.log('http://localhost:3001/')
-})
+app.use('/file', bigRouter);
+
+app.listen(3001, () => {
+	console.log('http://localhost:3001/');
+});

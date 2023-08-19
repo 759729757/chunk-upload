@@ -1,19 +1,37 @@
 var express = require('express');
 var router = express.Router();
-
-
+const { findUser } = require('../dao/user');
+const md5 = require('md5');
+const jwt = require('jsonwebtoken');
+const config = require('../config');
+const requestCode = config.requestCode;
 
 //实现登录验证功能
-router.get('/login', function (req, res) {
-    var name = req.query.name;
-    var pwd = md5(req.query.pwd);
-    console.log('pwd', pwd);
-    var selectSQL = "select * from information where useName = '" + name + "' and password = '" + pwd + "'";
-    connection.query(selectSQL, function (err, rs) {
-        if (err) throw err;
-        console.log('登陆', rs);
-        console.log('OK');
-        res.sendfile(__dirname + "/" + "OK.html");
-    })
-})
-module.exports = router
+router.post('/manager_login', function (req, res) {
+	const query = req.body;
+	findUser(query.userName, query.password).then(function (result, reject) {
+		if (result[0]) {
+			const token = jwt.sign(
+				{
+					data: result[0],
+				},
+				config.secretKey,
+				{ expiresIn: config.expired }
+			);
+
+			res.jsonp({
+				data: token,
+				msg: 'success',
+				code: requestCode.success,
+			});
+		} else {
+			res.jsonp({
+				data: null,
+				msg: 'no found',
+				code: requestCode.noFound,
+			});
+		}
+	});
+});
+
+module.exports = router;

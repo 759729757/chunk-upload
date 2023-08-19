@@ -1,12 +1,24 @@
-const mysql = require('mysql');
-// 初始化表结构
+const pool = require('./db');
 
-const pool = mysql.createPool({
-	host: 'localhost',
-	user: 'root',
-	password: '123456',
-	database: 'videoLib',
-	port: '3306',
-});
+var query = (sql, val) => {
+	return new Promise((resolve, reject) => {
+		pool.getConnection((err, connection) => {
+			if (err) {
+				return resolve(err);
+			} else {
+				connection.query(sql, val, (err, rows) => {
+					console.log('执行查询语句：');
+					console.log(sql);
+					if (err) {
+						reject(err);
+					} else {
+						resolve(rows);
+					}
+					connection.release();
+				});
+			}
+		});
+	});
+};
 
-module.exports = pool;
+module.exports = query;

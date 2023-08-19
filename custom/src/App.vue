@@ -1,10 +1,7 @@
-<script setup>
-
-import Bigform from './components/bigform.vue'
-</script>
+<script setup></script>
 
 <template>
-  <div>
-    <Bigform></Bigform>
-  </div>
+	<!-- 路由匹配到的组件将渲染在这里 -->
+	<router-view />
+	<!-- <Bigform></Bigform> -->
 </template>

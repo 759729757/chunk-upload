@@ -13,12 +13,13 @@ const users = `create table if not exists users(
 let videos = `create table if not exists videos(
      id INT NOT NULL AUTO_INCREMENT,
      name VARCHAR(100) NOT NULL,
+     filename VARCHAR(100) NOT NULL,
      classify VARCHAR(100),
      img VARCHAR(40),
      star INT(40) NOT NULL DEFAULT 0,
      timelong VARCHAR(40),
      author VARCHAR(100),
-     detail VARCHAR(1000),
+     descript VARCHAR(1000),
 	 tags VARCHAR(100),
      PRIMARY KEY ( id )
     );`;

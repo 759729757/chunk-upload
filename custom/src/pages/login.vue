@@ -38,6 +38,9 @@ import { reactive, ref } from 'vue';
 import { User, Lock } from '@element-plus/icons-vue';
 import md5 from 'md5';
 import axios from 'axios';
+import http from '../http';
+import { useRouter, useRoute } from 'vue-router';
+const router = useRouter();
 
 const labelPosition = ref('right');
 
@@ -55,9 +58,14 @@ const submit = () => {
 		.then(function (response) {
 			// handle success
 			console.log(response);
-			const data = response.data;
+			const data = response;
 			if (data.code === 200) {
-				axios.defaults.headers['u'] = data.data;
+				// 将token设入请求头，并缓存
+				http.setHeader('u', data.data);
+				localStorage.setItem('u', data.data);
+				router.push({
+					path: 'admin',
+				});
 			}
 		})
 		.catch(function (error) {
@@ -69,17 +77,21 @@ const submit = () => {
 		});
 };
 </script>
-<style>
-body {
-	background-color: #eee;
-	background-image: url('../assets/bg.webp');
-	background-size: cover;
-}
-</style>
 <style lang="scss" scoped>
 .bg {
 	width: 100%;
 	height: 100%;
+	position: fixed;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #eee;
+	background-image: url('../assets/bg.webp');
+	background-size: cover;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 .form {
 	width: 400px;

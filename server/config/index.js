@@ -4,6 +4,11 @@ const config = {
 	// token 过期时间（单位 秒）
 	expired: 60 * 60, // 1小时
 
+	// 文件中转目录, 目前在public下
+	fileTrans: 'trans',
+	// 文件存储目录, 目前在public下
+	filesLib: 'files',
+
 	// 请求响应代码
 	requestCode: {
 		success: 200,

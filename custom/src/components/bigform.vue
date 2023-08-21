@@ -1,6 +1,5 @@
 <template>
 	<div class="upload">
-		<h3>大文件上传、断点续传</h3>
 		<form>
 			<div class="upload-file">
 				<label for="file">请选择文件</label>
@@ -20,7 +19,7 @@
 				</p>
 			</div>
 		</form>
-		<div class="control">
+		<!-- <div class="control">
 			<button
 				class="btn"
 				@click="beginUpload">
@@ -31,13 +30,15 @@
 				@click="cancelUpload">
 				取消
 			</button>
-		</div>
+		</div> -->
 	</div>
 </template>
 
 <script setup>
 import { computed, defineComponent, ref } from 'vue';
 import axios from 'axios';
+
+const emit = defineEmits(['canUpload', 'submitInfo']);
 
 //axios请求取消token
 const CancelToken = axios.CancelToken;
@@ -107,7 +108,7 @@ const getMd5 = async (files) => {
 		worker.postMessage({ files });
 		//监听MD5计算完成事件
 		worker.onmessage = (event) => {
-			md5Val.value = event.data.hash;
+			md5Val.value = event.data.hash + new Date().valueOf();
 			resolve();
 		};
 	});
@@ -116,7 +117,7 @@ const getMd5 = async (files) => {
 //上传文件前检查
 const uploadCheck = async () => {
 	let res = await axios({
-		url: `${baseUrl}/file/check?md5Val=${md5Val.value}&total=${fileArr.value.length}`,
+		url: `${baseUrl}/file/auth/check?md5Val=${md5Val.value}&total=${fileArr.value.length}`,
 		method: 'post',
 	});
 
@@ -128,6 +129,7 @@ const uploadCheck = async () => {
 	}
 	//文件切片顺序已检查完毕，此时可以上传
 	controlUpload.value = true;
+	emit('canUpload', '');
 };
 
 //分块上传请求
@@ -140,7 +142,7 @@ const uploadSlice = async () => {
 		formData.append('file', fileArr.value[chunkIndex.value]);
 
 		axios({
-			url: `${baseUrl}/file/upload?current=${chunkIndex.value}&md5Val=${md5Val.value}&total=${fileArr.value.length}`,
+			url: `${baseUrl}/file/auth/upload?current=${chunkIndex.value}&md5Val=${md5Val.value}&total=${fileArr.value.length}`,
 			method: 'post',
 			data: formData,
 			cancelToken: new CancelToken(function executor(c) {
@@ -148,7 +150,7 @@ const uploadSlice = async () => {
 			}),
 		})
 			.then((res) => {
-				if (res.data.code == 200) {
+				if (res.code == 200) {
 					++chunkIndex.value;
 					uploadSlice();
 				}
@@ -162,13 +164,15 @@ const uploadSlice = async () => {
 //合并文件请求
 const mergeFile = async () => {
 	let res = await axios({
-		url: `${baseUrl}/file/merge?md5Val=${md5Val.value}&total=${fileArr.value.length}&ext=${ext.value}`,
+		url: `${baseUrl}/file/auth/merge?md5Val=${md5Val.value}&total=${fileArr.value.length}&ext=${ext.value}`,
 		method: 'post',
 	});
-	if (res.data.code == 200) {
-		alert('上传成功！');
+	console.log('res', res);
+	if (res.code == 200) {
+		// 文件传好了，通知父组件可以上传信息了
+		emit('submitInfo', `${md5Val.value}.${ext.value}`);
 	} else {
-		alert(res.data.data.info);
+		alert(res.data.info);
 	}
 };
 
@@ -187,6 +191,10 @@ const cancelUpload = () => {
 		cancel.value('取消请求');
 	}
 };
+
+defineExpose({
+	beginUpload,
+});
 </script>
 
 <style lang="scss" scoped>
@@ -207,12 +215,10 @@ p {
 
 .upload {
 	box-sizing: border-box;
-	margin: 30px auto;
-	padding: 15px 20px;
+	// padding: 15px 20px;
 	width: 500px;
 	height: auto;
 	border-radius: 15px;
-	// background: #fff;
 }
 
 .upload h3 {
@@ -223,7 +229,6 @@ p {
 
 .upload .upload-file {
 	position: relative;
-	margin: 30px auto;
 }
 
 .upload .upload-file label {

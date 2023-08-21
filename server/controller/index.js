@@ -1,8 +1,14 @@
 const formidable = require('formidable');
 const path = require('path');
 const fs = require('fs');
+const config = require('../config');
 const baseUrl = 'http://localhost:3000/file/';
-const dirPath = path.join(__dirname, '/static/');
+const dirPath = path.join(__dirname, '../public/');
+const transFileName = config.fileTrans; // 文件中转目录
+const fileLib = config.filesLib; // 文件存储目录
+
+mkdirPath(dirPath + transFileName);
+mkdirPath(dirPath + fileLib);
 
 // 多个块合并成一个文件
 function mergeFile(filePath, newPath) {
@@ -10,7 +16,7 @@ function mergeFile(filePath, newPath) {
 		let files = fs.readdirSync(filePath),
 			newFile = fs.createWriteStream(newPath);
 		let filesArr = files.sort((a, b) => {
-			return Number(a) > Number(b);
+			return Number(a) - Number(b);
 		});
 
 		main(0);
@@ -70,7 +76,7 @@ const checkQuery = (md5Val, total) => {
 const check = async (req, res) => {
 	let md5Val = req.query.md5Val;
 	let total = req.query.total;
-	let bigDir = dirPath + 'big/';
+	let bigDir = dirPath + transFileName;
 
 	let checkObj = checkQuery(md5Val, total);
 	if (checkObj.code != 200) {
@@ -124,7 +130,7 @@ const check = async (req, res) => {
 const upload = async (req, res) => {
 	let md5Val = req.query.md5Val;
 	let total = req.query.total;
-	let bigDir = dirPath + 'big/';
+	let bigDir = dirPath + transFileName;
 
 	let checkObj = checkQuery(md5Val, total);
 	if (checkObj.code != 200) {
@@ -143,14 +149,14 @@ const upload = async (req, res) => {
 
 	let form = formidable({
 		multiples: true,
-		uploadDir: `${dirPath}big/${md5Val}/`,
+		uploadDir: `${dirPath}${transFileName}${md5Val}/`,
 	});
 
 	form.parse(req, (err, fields, files) => {
 		if (err) {
 			return res.json(err);
 		}
-		let newPath = `${dirPath}big/${md5Val}/${current}`;
+		let newPath = `${dirPath}${transFileName}${md5Val}/${current}`;
 		fs.rename(files.file.filepath, newPath, function (err) {
 			if (err) {
 				return res.json(err);
@@ -170,7 +176,7 @@ const merge = (req) => {
 	return new Promise(async (resolve, reject) => {
 		let md5Val = req.query.md5Val;
 		let total = req.query.total;
-		let bigDir = dirPath + 'big/';
+		let bigDir = dirPath + transFileName;
 
 		let checkObj = checkQuery(md5Val, total);
 		if (checkObj.code != 200) {
@@ -187,10 +193,12 @@ const merge = (req) => {
 			});
 		}
 
-		let oldPath = `${dirPath}big/${md5Val}`;
-		let newPath = `${dirPath}doc/${md5Val}.${ext}`;
+		let oldPath = `${dirPath}${transFileName}${md5Val}`;
+		let newPath = `${dirPath}${fileLib}/${md5Val}.${ext}`;
 		let data = await mergeFile(oldPath, newPath);
 		if (data.code == 200) {
+			// 合并成功后删除中转目录
+			deleteFolderRecursive(oldPath);
 			resolve({
 				code: 200,
 				msg: 'get_succ',
@@ -211,6 +219,35 @@ const merge = (req) => {
 		}
 	});
 };
+
+// 递归删除目录
+function deleteFolderRecursive(folderPath) {
+	if (fs.existsSync(folderPath)) {
+		fs.readdirSync(folderPath).forEach((file, index) => {
+			const curPath = path.join(folderPath, file);
+			if (fs.lstatSync(curPath).isDirectory()) {
+				// 递归删除子目录
+				deleteFolderRecursive(curPath);
+			} else {
+				// 删除文件
+				fs.unlinkSync(curPath);
+			}
+		});
+		// 删除空目录
+		fs.rmdirSync(folderPath);
+	}
+}
+
+/**
+ * 判读路径是否存在,如不存在创建文件夹
+ */
+function mkdirPath(pathStr) {
+	if (fs.existsSync(pathStr)) {
+		return;
+	} else {
+		fs.mkdirSync(pathStr);
+	}
+}
 
 module.exports = {
 	check,

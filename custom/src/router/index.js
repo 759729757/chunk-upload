@@ -4,6 +4,9 @@ import {
 	createWebHashHistory,
 } from 'vue-router';
 import Bigform from '@/components/bigform.vue';
+import Upload from '@/components/upload.vue';
+import List from '@/components/video-list.vue';
+import AdminHome from '@/pages/AdminHome.vue';
 import Login from '@/pages/login.vue';
 
 const routes = [
@@ -12,8 +15,19 @@ const routes = [
 		component: Login,
 	},
 	{
-		path: '/upload',
-		component: Bigform,
+		path: '/admin',
+		component: AdminHome,
+		children: [
+			{ path: '', name: 'list', component: List },
+			{ path: 'upload', name: 'upload', component: Upload },
+		],
+		beforeEnter: (to, from) => {
+			const token = localStorage.getItem('u');
+			if (!token) {
+				return { path: '/', query: {}, hash: to.hash };
+			}
+			// reject the navigation
+		},
 	},
 ];
 
